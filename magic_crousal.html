@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Magic Carousel — The Obsidian Assembly</title>
+<meta name="theme-color" content="#151415">
+<meta name="color-scheme" content="dark">
+<link rel="shortcut icon" type="image/x-icon" href="fav/favicon.ico">
+<style>
+/* ============== FONTS ============== */
+@font-face{font-family:OTJubilee-Platinum;font-style:normal;src:url(fonts/OTJubilee-PlatinumRegular.woff2) format("woff2"),url(fonts/OTJubilee-PlatinumRegular.woff) format("woff")}
+@font-face{ascent-override:100%;descent-override:10%;font-family:Voyage-Regular;font-style:normal;src:url(fonts/Voyage-Regular.woff2) format("woff2"),url(fonts/Voyage-Regular.woff) format("woff")}
+@font-face{font-family:Switzer-Medium;font-style:normal;src:url(fonts/Switzer-Medium.woff2) format("woff2"),url(fonts/Switzer-Medium.woff) format("woff")}
+@font-face{font-family:Switzer-Regular;font-style:normal;src:url(fonts/Switzer-Regular.woff2) format("woff2"),url(fonts/Switzer-Regular.woff) format("woff")}
+
+/* ============== BASE TOKENS ============== */
+:root{
+  --c-white:#fff; --c-white-rgb:255,255,255;
+  --c-black:#151415; --c-black-rgb:21,20,21;
+  --c-grey:#3f383c; --c-grey-rgb:63,56,60;
+  --c-yellow:#f1eade; --c-yellow-rgb:241,234,222;
+  --c-brown:#7b5136; --c-brown-rgb:123,81,54;
+  --f-cubic:cubic-bezier(0.35,0.35,0,1);
+  --f-cubic-in:cubic-bezier(0.69,0,0,1);
+  --f-fast:cubic-bezier(0.2,0.75,0.35,1);
+  --f-smooth:cubic-bezier(0.5,0,0.3,1);
+  --font-b-regular:"Switzer-Regular",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-b-medium:"Switzer-Medium",system-ui,sans-serif;
+  --font-t-1:"OTJubilee-Platinum",serif;
+  --font-t-2:"Voyage-Regular",serif;
+
+  --type-step:1.25;
+  --p:1rem;
+  --m:calc(var(--p)/var(--type-step));
+  --mm:calc(var(--m)/var(--type-step));
+  --h6:calc(var(--p)*var(--type-step));
+  --h5:calc(var(--h6)*var(--type-step));
+  --h4:calc(var(--h5)*var(--type-step));
+  --h3:calc(var(--h4)*var(--type-step));
+  --h2:calc(var(--h3)*var(--type-step));
+  --h1:calc(var(--h2)*var(--type-step));
+  --h0:calc(var(--h1)*var(--type-step));
+  --large:max(calc(var(--h0)*var(--type-step)*var(--type-step)),12.5vw);
+  --h0-lh:1; --h1-lh:1; --h2-lh:1.05; --h3-lh:1.05; --h4-lh:1.1; --h5-lh:1.15; --h6-lh:1.2;
+  --large-lh:.95;
+  --body-line-height:1.3;
+
+  --g-columns:6; --g-gap:var(--p);
+  --g-margin:var(--g-gap);
+  --vh:1vh;
+}
+@media (min-width:1024px){
+  :root{--g-columns:12;--g-margin:calc(var(--g-gap)*2)}
+}
+@media (min-width:1024px) and (min-height:512px){html{font-size:20px}}
+@media (min-width:1600px) and (min-height:800px){html{font-size:22px}}
+@media (min-width:1920px) and (min-height:960px){html{font-size:24px}}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background-color:var(--c-yellow);color:var(--c-black);font-family:var(--font-b-regular);font-size:16px;line-height:var(--body-line-height);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+img,svg,video,canvas{display:block;max-width:100%}
+
+.-w{margin:0 var(--g-margin)}
+.-h5{font-size:var(--h5);line-height:var(--h5-lh)}
+.-h3{font-size:var(--h3);line-height:var(--h3-lh)}
+.-mm{font-family:var(--font-b-medium);font-size:var(--mm);line-height:var(--body-line-height)}
+button{background:transparent;border:none;color:inherit;font:inherit;cursor:pointer;padding:0}
+
+/* ============== CAROUSEL (c-particles) ============== */
+.c-particles{
+  background-color:transparent;
+  height:calc(var(--vh,1vh)*800);
+  pointer-events:none;position:relative;
+}
+.c-particles .stick{
+  background-color:transparent;
+  display:grid;
+  height:calc(var(--vh,1vh)*100);
+  place-items:1/1;
+  position:sticky;top:0;z-index:20;overflow:hidden;
+}
+.c-particles .stick::before{
+  content:"";display:block;position:absolute;pointer-events:none;
+  background-image:linear-gradient(to top,var(--c-yellow) var(--large),rgba(var(--c-yellow-rgb),0) 100%);
+  background-position:50%;background-repeat:no-repeat;background-size:100%;
+  height:calc(var(--large)*4);
+  inset:auto 0 0 0;
+  scale:1 1;transform-origin:50% 100%;
+  transition:scale 1.5s var(--f-cubic);
+  z-index:10;
+}
+.c-particles .stick::after{
+  content:"";display:block;position:absolute;pointer-events:none;
+  background-image:linear-gradient(0deg,rgba(var(--c-black-rgb),0),rgba(var(--c-black-rgb),.5) 50%,rgba(var(--c-black-rgb),0));
+  inset:0;opacity:1;
+  transition:opacity 3s var(--f-cubic);z-index:5;
+}
+@media (min-width:1024px){
+  .c-particles .stick::before{height:calc(var(--large)*2)}
+}
+
+/* WebGL particle background */
+.c-particles .scatter-container{
+  position:absolute;inset:0;
+  height:calc(var(--vh,1vh)*100);
+  overflow:hidden;
+  z-index:1;
+  background:var(--c-yellow);
+}
+.c-particles .scatter-container .bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;
+  opacity:0;
+  transition:opacity .8s var(--f-cubic);
+  z-index:1;
+}
+/* Fallback img is only visible when WebGL has failed */
+.c-particles .scatter-container.-gl-failed .bg-img.-active{opacity:1}
+.c-particles .webgl-canvas{
+  position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;
+  background:var(--c-yellow); /* yellow underneath particles so scatter reveals it */
+}
+.c-particles .scatter-container.-gl-failed .webgl-canvas{display:none}
+.c-particles .scatter-container::after{
+  content:"";display:block;position:absolute;inset:0;
+  background-image:linear-gradient(to top,var(--c-yellow) 0%,rgba(var(--c-yellow-rgb),0) 35%);
+  pointer-events:none;z-index:2;
+}
+
+/* Numbered path */
+.c-particles .stick .path{
+  align-items:center;align-self:center;
+  color:var(--c-yellow);display:flex;
+  grid-area:1/1;justify-content:space-around;
+  margin-left:var(--g-margin);margin-right:var(--g-margin);
+  pointer-events:none;position:relative;transform:translateZ(0);
+  z-index:20;font-family:var(--font-t-1);
+}
+.c-particles .stick .path > .line{
+  background-color:rgba(var(--c-black-rgb),.2);
+  inset:auto 0 auto 0;opacity:1;position:absolute;height:1px;
+}
+.c-particles .stick .path > .line::before{
+  content:"";display:block;height:1px;width:100%;
+  background-color:rgba(var(--c-yellow-rgb),.6);
+  scale:var(--smart-progress,0) 1;
+  transform-origin:0 50%;
+  transition:scale .15s linear;
+}
+.c-particles .stick .path .i{
+  align-items:center;display:flex;justify-content:center;
+  height:var(--p);width:var(--p);
+  padding:var(--g-gap);position:relative;
+  scale:1;opacity:1;
+  font-size:var(--h3);line-height:1;
+  transition:scale 1.5s var(--f-cubic),opacity 1.5s var(--f-cubic);
+}
+@media (min-width:1024px){
+  .c-particles .stick .path .i{height:var(--h3);width:var(--h3);padding:calc(var(--g-gap)*2)}
+}
+.c-particles .stick .path .i::before,
+.c-particles .stick .path .i::after{
+  content:"";display:block;position:absolute;
+  border:1px solid rgba(var(--c-yellow-rgb),.2);
+  border-radius:50%;inset:0;padding:50% 0;width:100%;scale:.5;
+  transition:scale 1.5s var(--f-cubic),border 1.5s var(--f-cubic),background-color 1.5s var(--f-cubic);
+  z-index:20;
+}
+@media (min-width:1024px){
+  .c-particles .stick .path .i::before,
+  .c-particles .stick .path .i::after{scale:.8}
+}
+.c-particles .stick .path .i::after{
+  background-image:radial-gradient(circle,rgba(var(--c-black-rgb),.4),rgba(var(--c-black-rgb),0) 60%);
+  border:1px solid rgba(var(--c-yellow-rgb),.1);
+  padding:60% 0;width:120%;left:-10%;z-index:15;
+}
+.c-particles .stick .path .i > span{
+  color:var(--c-yellow);display:flex;position:relative;
+  text-shadow:0 0 0 var(--c-yellow),0 .4rem .8rem var(--c-black);
+  transition:color 1.5s var(--f-cubic),text-shadow 1.5s var(--f-cubic);
+  z-index:30;
+}
+.c-particles .stick .path .i.-active::before{
+  background-color:rgba(var(--c-black-rgb),.2);
+  border:1px solid rgba(var(--c-yellow-rgb),.4);scale:1;
+}
+.c-particles .stick .path .i.-active::after{
+  background-color:rgba(var(--c-black-rgb),.1);
+  border:1px solid rgba(var(--c-yellow-rgb),.2);scale:1;
+}
+.c-particles .stick .path .i.-active > span{
+  color:var(--c-white);
+  text-shadow:0 0 .8rem var(--c-yellow),0 .4rem .8rem var(--c-black);
+}
+
+/* Bottom info area */
+.c-particles .stick .-w{
+  align-self:end;background-color:transparent;
+  grid-area:1/1;justify-self:stretch;
+  display:grid;grid-template-columns:repeat(var(--g-columns),1fr);gap:var(--g-gap);
+  margin:0 var(--g-margin) var(--h4);
+  opacity:1;pointer-events:none;position:relative;z-index:20;
+}
+.c-particles .stick .-w .place-name{
+  grid-column:1 / -1;display:grid;justify-content:center;
+  margin-bottom:var(--p);place-items:center;position:relative;
+  color:var(--c-black);text-align:center;
+  font-family:var(--font-t-2);line-height:.95;
+}
+@media (min-width:1024px){
+  .c-particles .stick .-w .place-name{margin-bottom:var(--h3)}
+}
+.c-particles .stick .-w .place-name > .place{
+  grid-area:1/1;display:inline-flex;flex-wrap:wrap;
+  justify-content:center;pointer-events:none;
+  font-size:var(--large);
+}
+.c-particles .stick .-w .place-name > .place .ch{
+  display:inline-flex;
+  filter:blur(.05em);opacity:0;scale:2;
+  transform:translateZ(0) skew(15deg,30deg);
+  transition:opacity 1.5s var(--f-fast),scale 1.5s var(--f-fast),translate 1.5s var(--f-fast),transform 1.5s var(--f-fast),filter 1.5s var(--f-fast);
+  transition-delay:calc(var(--char-random,0) * 75ms);
+  translate:calc(var(--dx,.25)*1em) calc(var(--dy,1)*1em);
+  margin:-.25em -.05em;padding:.25em .05em;will-change:contents;
+}
+.c-particles .stick .-w .place-name > .place.-active{pointer-events:all}
+.c-particles .stick .-w .place-name > .place.-active .ch{
+  filter:blur(0);opacity:1;scale:1;
+  transform:translateZ(0) skew(0deg,0deg);translate:0 0;
+}
+.c-particles .stick .-w .info{
+  display:block;text-align:left;color:var(--c-black);
+  transition:opacity .6s var(--f-cubic),translate 1.5s var(--f-cubic);
+  font-family:var(--font-b-medium);font-size:var(--mm);
+  line-height:var(--body-line-height);
+}
+.c-particles .stick .-w .info.-leaving{opacity:0;translate:0 -1em}
+.c-particles .stick .-w .info.-entering{opacity:0;translate:0 1em}
+.c-particles .stick .-w .status{grid-column:1 / span 2}
+.c-particles .stick .-w .caption{grid-column:1 / span 4}
+.c-particles .stick .-w .usage{grid-column:4 / span 3}
+.c-particles .stick .-w .object{grid-column:1 / -1;margin-top:var(--mm)}
+@media (min-width:1024px){
+  .c-particles .stick .-w .status{grid-column:1 / span 2}
+  .c-particles .stick .-w .caption{grid-column:3 / span 3}
+  .c-particles .stick .-w .usage{grid-column:7 / span 3}
+  .c-particles .stick .-w .object{grid-column:10 / span 3;text-align:right;margin-top:0}
+}
+
+/* IMAGINE POSSIBLE footer strip */
+.ip-strip{
+  position:fixed;bottom:0;left:50%;translate:-50% 0;
+  background-color:var(--c-black);color:var(--c-yellow);
+  padding:.35rem 1.4rem;font-family:var(--font-b-medium);
+  font-size:.7rem;letter-spacing:.3em;z-index:40;
+}
+</style>
+</head>
+<body>
+
+<section class="c-particles" id="particles">
+  <div class="stick">
+    <div class="scatter-container" id="scatter">
+      <img class="bg-img -active" data-i="0" src="images/offices/1.webp" alt="">
+      <img class="bg-img" data-i="1" src="images/offices/2.webp" alt="">
+      <img class="bg-img" data-i="2" src="images/offices/3.webp" alt="">
+      <img class="bg-img" data-i="3" src="images/offices/4.webp" alt="">
+      <img class="bg-img" data-i="4" src="images/offices/5.webp" alt="">
+      <img class="bg-img" data-i="5" src="images/offices/6.webp" alt="">
+      <img class="bg-img" data-i="6" src="images/offices/7.webp" alt="">
+      <canvas class="webgl-canvas" id="glcanvas"></canvas>
+    </div>
+
+    <div class="path">
+      <span class="line"></span>
+      <div class="i -active" data-i="0"><span>1</span></div>
+      <div class="i" data-i="1"><span>2</span></div>
+      <div class="i" data-i="2"><span>3</span></div>
+      <div class="i" data-i="3"><span>4</span></div>
+      <div class="i" data-i="4"><span>5</span></div>
+      <div class="i" data-i="5"><span>6</span></div>
+      <div class="i" data-i="6"><span>7</span></div>
+    </div>
+
+    <div class="-w">
+      <span class="place-name">
+        <span class="place -active" data-i="0" data-dx="0"    data-dy="1"    data-text="Lower Hall"></span>
+        <span class="place"          data-i="1" data-dx="-1"   data-dy="-0.25" data-text="Inner Chamber"></span>
+        <span class="place"          data-i="2" data-dx="0"    data-dy="1"    data-text="The Passage"></span>
+        <span class="place"          data-i="3" data-dx="-0.75" data-dy="0.5"  data-text="Silent Room"></span>
+        <span class="place"          data-i="4" data-dx="1"    data-dy="-0.25" data-text="The Threshold"></span>
+        <span class="place"          data-i="5" data-dx="0"    data-dy="-0.75" data-text="The Vault"></span>
+        <span class="place"          data-i="6" data-dx="1"    data-dy="1"    data-text="Back Space"></span>
+      </span>
+      <span class="info status"  id="status">Operational</span>
+      <span class="info caption" id="caption">Subterranean interior maintained under controlled light conditions.</span>
+      <span class="info usage"   id="usage">Used intermittently.</span>
+      <span class="info object"  id="object">Associated object: The Rabbit Keeper</span>
+    </div>
+  </div>
+</section>
+
+<div class="ip-strip">IMAGINE POSSIBLE</div>
+
+<script>
+/* ============================================================
+   1) PLACES DATA + DOM HOOKS + INFO TRANSITIONS
+   ============================================================ */
+const PLACES = [
+  { name:"Lower Hall",    status:"Operational",  caption:"Subterranean interior maintained under controlled light conditions.", usage:"Used intermittently.", object:"Associated object: The Rabbit Keeper", src:"images/offices/1.webp" },
+  { name:"Inner Chamber", status:"Operational",  caption:"Enclosed space designed for focused, low-intervention work.",          usage:"Used.",                object:"No object associated.",                  src:"images/offices/2.webp" },
+  { name:"The Passage",   status:"Operational",  caption:"Transitional environment connecting primary interiors.",               usage:"Used intermittently.", object:"Associated object: The Guardian",        src:"images/offices/3.webp" },
+  { name:"Silent Room",   status:"Limited use",  caption:"Acoustically isolated interior with minimal visual variation.",        usage:"Used intermittently.", object:"No object associated.",                  src:"images/offices/4.webp" },
+  { name:"The Threshold", status:"Operational",  caption:"Entry-adjacent space marking the transition between outside and inside conditions.", usage:"Used intermittently.", object:"Associated object: The Fox Spirit", src:"images/offices/5.webp" },
+  { name:"The Vault",     status:"Limited use",  caption:"Secure interior with restricted access and minimal exposure.",         usage:"Paused",               object:"Associated object: The Elder",           src:"images/offices/6.webp" },
+  { name:"Back Space",    status:"Forming",      caption:"Secondary environment currently under development.",                   usage:"Unused.",              object:"Object formation pending.",              src:"images/offices/7.webp" }
+];
+
+/* split place name labels into per-char spans w/ random delay */
+document.querySelectorAll('.place').forEach((el) => {
+  const text = el.getAttribute('data-text') || '';
+  el.style.setProperty('--dx', el.getAttribute('data-dx'));
+  el.style.setProperty('--dy', el.getAttribute('data-dy'));
+  el.innerHTML = '';
+  text.split('').forEach((c) => {
+    const span = document.createElement('span');
+    span.className = 'ch';
+    span.style.setProperty('--char-random', Math.random() * 10);
+    span.textContent = c === ' ' ? ' ' : c;
+    el.appendChild(span);
+  });
+});
+
+const section   = document.getElementById('particles');
+const dots      = Array.from(document.querySelectorAll('.path .i'));
+const places    = Array.from(document.querySelectorAll('.place'));
+const lineEl    = document.querySelector('.path .line');
+const statusEl  = document.getElementById('status');
+const captionEl = document.getElementById('caption');
+const usageEl   = document.getElementById('usage');
+const objectEl  = document.getElementById('object');
+const infoEls   = [statusEl, captionEl, usageEl, objectEl];
+
+const bgImgs   = Array.from(document.querySelectorAll('.bg-img'));
+
+let currentIndex = 0;
+function setInfo(idx){
+  const data = PLACES[idx];
+  infoEls.forEach((el, i) => {
+    el.classList.add('-leaving');
+    setTimeout(() => {
+      if (el === statusEl)  el.textContent = data.status;
+      if (el === captionEl) el.textContent = data.caption;
+      if (el === usageEl)   el.textContent = data.usage;
+      if (el === objectEl)  el.textContent = data.object;
+      el.classList.remove('-leaving');
+      el.classList.add('-entering');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => el.classList.remove('-entering'));
+      });
+    }, 200 + i * 80);
+  });
+}
+function setActiveDom(idx){
+  if (idx === currentIndex) return;
+  currentIndex = idx;
+  dots.forEach((d, i)   => d.classList.toggle('-active', i === idx));
+  places.forEach((p, i) => p.classList.toggle('-active', i === idx));
+  bgImgs.forEach((b, i) => b.classList.toggle('-active', i === idx));
+  setInfo(idx);
+}
+
+/* ============================================================
+   SHARED STATE + SMOOTH PROGRESS DRIVER  (mirrors the original
+   ImageCircleScatter component's per-slide state machine).
+
+   Per-slide:
+     anchorProgress = k / (N-1)            (uniform spacing)
+     targetPhase    = clamp(|U-anchor|/W)  (1 when far, 0 at anchor)
+     phase          = exp-damped toward targetPhase
+                       (rise=85ms, fall=420ms — like manualBlend)
+     weight         = exp(-d²/(2σ²)) · (1-phase)        gaussian crossfade
+     parallax       = (U - anchor) / (1/(N-1))          per-slide slide
+
+   Up to 4 most-weighted layers are rendered per frame, painted from
+   most-scattered to least so the assembled image lays on top.
+   ============================================================ */
+const ORIGINAL = {
+  sigma:          0.16,
+  windowFrac:     1.0 / (PLACES.length - 1),       /* ~0.167 */
+  parallaxScale:  1.2,
+  parallaxStrength: 0.12,
+  randomness:     1.9,
+  scatterDistance:13.0,
+  particleBaseScale: 1.4142,
+  maxParticleScale: 50.0,
+  hoverSpeed:     0.5,
+  hoverAmplitude: 0.5,
+  affectRatio:    1.0,
+  riseMs:         85,
+  fallMs:         420,
+  scrollLerpHz:   9.0,         /* exp rate (per second) for progress damping */
+  maxActiveLayers:4,
+};
+
+const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+const clamp01        = t => t < 0 ? 0 : t > 1 ? 1 : t;
+
+const SLIDE_STATE = PLACES.map((_, k) => ({
+  anchor: PLACES.length > 1 ? k / (PLACES.length - 1) : 0,
+  phase: 1,           /* start fully scattered */
+  weight: 0,
+  parallax: 0,
+}));
+SLIDE_STATE[0].phase = 0; /* first slide starts assembled */
+
+const STATE = {
+  targetProgress: 0,
+  displayedProgress: 0,
+  index: 0,
+  layers: [],
+};
+
+function syncFromScroll() {
+  const rect  = section.getBoundingClientRect();
+  const total = section.offsetHeight - window.innerHeight;
+  let scrolled = -rect.top;
+  if (scrolled < 0) scrolled = 0;
+  if (scrolled > total) scrolled = total;
+  STATE.targetProgress = total > 0 ? scrolled / total : 0;
+}
+window.addEventListener('scroll', syncFromScroll, { passive:true });
+window.addEventListener('resize', syncFromScroll);
+syncFromScroll();
+STATE.displayedProgress = STATE.targetProgress;
+
+let _lastTickTime = 0;
+function tick(now) {
+  requestAnimationFrame(tick);
+  const dt = Math.min(0.1, _lastTickTime ? (now - _lastTickTime) / 1000 : 0.016);
+  _lastTickTime = now;
+
+  /* (1) exp-damp the scroll target into a silky displayedProgress */
+  const kScroll = 1 - Math.exp(-ORIGINAL.scrollLerpHz * dt);
+  STATE.displayedProgress += (STATE.targetProgress - STATE.displayedProgress) * kScroll;
+
+  const U     = STATE.displayedProgress;
+  const W     = ORIGINAL.windowFrac;              /* anchor spacing */
+  const sigma = ORIGINAL.sigma;
+
+  /* (2) per-slide phase, weight, parallax  */
+  let bestWeight = -1, bestIdx = STATE.index;
+  for (let k = 0; k < SLIDE_STATE.length; k++) {
+    const s = SLIDE_STATE[k];
+    const d = U - s.anchor;                           /* signed distance */
+    const ad = Math.abs(d);
+    const targetPhase = easeInOutCubic(clamp01(ad / W));     /* 0 at anchor → 1 at neighbour */
+    /* asymmetric exp damping: snappier rise, slower fall (matches original) */
+    const tau = (targetPhase > s.phase) ? ORIGINAL.riseMs : ORIGINAL.fallMs;
+    const kPh = 1 - Math.exp(-(dt * 1000) / tau);
+    s.phase += (targetPhase - s.phase) * kPh;
+    s.phase  = clamp01(s.phase);
+
+    s.weight   = Math.exp(-(d*d) / (2*sigma*sigma)) * (1 - s.phase);
+    s.parallax = Math.max(-1.2, Math.min(1.2, d / W));  /* clamped */
+
+    if (s.weight > bestWeight) { bestWeight = s.weight; bestIdx = k; }
+  }
+
+  /* (3) pick the top-N highest-weight layers, sort most-scattered first */
+  STATE.layers = SLIDE_STATE
+    .map((s, k) => ({ index:k, phase:s.phase, weight:s.weight, parallax:s.parallax }))
+    .filter(L => L.weight > 0.01 || L.phase < 0.95)
+    .sort((a,b) => b.weight - a.weight)
+    .slice(0, ORIGINAL.maxActiveLayers)
+    .sort((a,b) => b.phase - a.phase);   /* paint most-scattered first */
+
+  if (bestIdx !== STATE.index) {
+    STATE.index = bestIdx;
+    setActiveDom(STATE.index);
+  }
+
+  /* (4) progress line under the dots */
+  const smart = Math.max(0, (STATE.displayedProgress - 1/8)) / (1 - 1/8);
+  lineEl.style.setProperty('--smart-progress', smart.toFixed(4));
+}
+requestAnimationFrame(tick);
+
+/* ============================================================
+   2) WEBGL2 PARTICLE SCATTER RENDERER
+   Uses the exact shaders from the original ImageCircleScatter
+   component, simplified (no cursor force interaction).
+   ============================================================ */
+const VSHADER = `#version 300 es
+precision highp float;
+precision mediump int;
+layout(location = 0) in vec2 a_corner;
+uniform vec2  u_grid;
+uniform float u_phase;
+uniform vec2  u_resolution;
+uniform float u_randomness;
+uniform float u_scatterDistance;
+uniform float u_particleBaseScale;
+uniform vec2  u_coverScale;
+uniform float u_parallaxOffset;
+uniform float u_parallaxStrength;
+uniform float u_parallaxScale;
+uniform float u_hoverSpeed;
+uniform float u_hoverAmplitude;
+uniform float u_affectRatio;
+uniform float u_time;
+out vec2 v_local;
+out vec2 v_sampleUV;
+out float v_scale;
+float hash2(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+float rayExitDistance(vec2 posClip, vec2 dirClip) {
+  float big = 1e6;
+  float tx = big, ty = big;
+  if (abs(dirClip.x) > 0.00001) {
+    float bx = dirClip.x > 0.0 ? 1.16 : -1.16;
+    tx = (bx - posClip.x) / dirClip.x;
+    if (tx < 0.0) tx = big;
+  }
+  if (abs(dirClip.y) > 0.00001) {
+    float by = dirClip.y > 0.0 ? 1.16 : -1.16;
+    ty = (by - posClip.y) / dirClip.y;
+    if (ty < 0.0) ty = big;
+  }
+  if (tx == big && ty == big) return 0.0;
+  if (tx == big) return ty;
+  if (ty == big) return tx;
+  return min(tx, ty);
+}
+void main() {
+  float cols = u_grid.x;
+  float rows = u_grid.y;
+  int instanceID = gl_InstanceID;
+  float cellX = float(instanceID % int(cols));
+  float cellY = float(instanceID / int(cols));
+  vec2 cell = vec2(cellX, cellY);
+  vec2 clipSpaceSize = vec2(2.0) / u_grid;
+  vec2 cellCenterClip = (cell / u_grid) * 2.0 - 1.0 + (clipSpaceSize * 0.5);
+  cellCenterClip.y *= -1.0;
+  float rowForUV = rows - 1.0 - cellY;
+  vec2 sampleUV = (vec2(cellX, rowForUV) + 0.5) / u_grid;
+
+  float p = clamp(u_phase, 0.0, 1.0);
+  p = smoothstep(0.0, 1.0, p);
+  float affectRatio = clamp(u_affectRatio, 0.0, 1.0);
+  float affectMask = step(hash2(cell + vec2(31.7, 79.3)), affectRatio);
+  p *= affectMask;
+
+  float randomAmp = clamp(u_randomness, 0.0, 3.0);
+  vec2 microJitter = vec2(hash2(cell + vec2(1.3, 5.7)) - 0.5, hash2(cell + vec2(8.9, 2.1)) - 0.5);
+  vec2 clipJitter = microJitter * clipSpaceSize * randomAmp * mix(0.01, 0.75, p);
+
+  vec2 hover = vec2(
+    sin(u_time * u_hoverSpeed + hash2(cell + vec2(11.1, 3.7)) * 6.28),
+    cos(u_time * u_hoverSpeed * 0.8 + hash2(cell + vec2(22.2, 9.1)) * 6.28)
+  );
+  vec2 hoverOffset = hover * clipSpaceSize * u_hoverAmplitude * p;
+  cellCenterClip += clipJitter + hoverOffset;
+
+  float ps = max(1.0, u_parallaxScale);
+  vec2 uv = (sampleUV - 0.5) / ps + 0.5;
+  uv = (uv - 0.5) * u_coverScale + 0.5;
+  uv += vec2(0.0, -u_parallaxOffset * u_parallaxStrength);
+  v_sampleUV = uv;
+
+  vec2 offset = vec2(0.0);
+  float randomAngle = hash2(cell * vec2(1.11, 3.73) + vec2(19.17, 4.11)) * 6.2831853;
+  float screenAspect = u_resolution.x / u_resolution.y;
+
+  vec2 radialDir = length(cellCenterClip) > 0.0001
+    ? normalize(cellCenterClip)
+    : vec2(cos(randomAngle), sin(randomAngle));
+  vec2 dir = normalize(mix(vec2(cos(randomAngle), sin(randomAngle)), radialDir, 0.65));
+  float chaos = clamp(randomAmp / 1.2, 0.0, 2.2);
+  float angJ = (hash2(cell + vec2(47.7, 9.3)) - 0.5) * (1.2 * chaos);
+  angJ += (hash2(cell * vec2(2.13, 0.97) + vec2(5.1, 13.3)) - 0.5) * (0.55 * chaos);
+  float ca = cos(angJ);
+  float sa = sin(angJ);
+  mat2 rot = mat2(ca, -sa, sa, ca);
+  vec2 dir2 = normalize(rot * dir);
+
+  float scatterSpeed = mix(0.76, 1.36, hash2(cell + vec2(9.13, 2.71)));
+  float scatterP = smoothstep(0.0, 1.0, pow(p, scatterSpeed));
+  vec2 dirClip = vec2(dir2.x, dir2.y * screenAspect);
+  float exitDist = rayExitDistance(cellCenterClip, dirClip);
+  float distMul = mix(1.5, 2.5, hash2(cell + vec2(5.31, 7.77)));
+  float overshoot = mix(0.1, 0.5, hash2(cell + vec2(2.03, 0.33)));
+  overshoot += clamp(u_scatterDistance, 0.5, 80.0) * 0.08;
+  float scatterDist = (exitDist + overshoot) * distMul;
+  vec2 jitter = vec2(
+    hash2(cell + vec2(1.00, 13.07)) - 0.5,
+    hash2(cell + vec2(1.73, 17.91)) - 0.5
+  );
+  float jitterMul = mix(0.1, 1.15, hash2(cell + vec2(6.17, 4.49)));
+  jitter *= jitterMul;
+  vec2 ortho = vec2(-dir2.y, dir2.x);
+  float wanderAmp = exitDist * mix(0.02, 0.22, hash2(cell + vec2(3.37, 8.33)));
+  float wanderSign = hash2(cell + vec2(1.41, 5.55)) > 0.5 ? 1.0 : -1.0;
+  float wanderT = scatterP * (1.0 - scatterP) * 4.0;
+  vec2 wander = ortho * wanderAmp * wanderSign * wanderT * scatterP;
+  offset = (dir2 * scatterDist + jitter) * scatterP + wander;
+
+  vec2 offsetClip = vec2(offset.x, offset.y * screenAspect);
+  float travelDist = length(offset);
+  float scale = 1.0 + travelDist * 0.15;
+  if (scale < 0.0) scale = 0.0;
+  v_scale = scale;
+
+  float finalScale = u_particleBaseScale * scale;
+  vec2 rotatedCorner = a_corner;
+  float zDepth = 0.9 - clamp(travelDist * 1.5, 0.0, 1.0);
+
+  gl_Position = vec4(cellCenterClip + offsetClip + (rotatedCorner * clipSpaceSize * 0.5 * finalScale), zDepth, 1.0);
+  v_local = rotatedCorner;
+}`;
+
+const FSHADER = `#version 300 es
+precision highp float;
+precision mediump int;
+uniform sampler2D u_tex;
+uniform vec2  u_grid;
+uniform float u_maxParticleScale;
+uniform float u_particleBaseScale;
+uniform vec2  u_coverScale;
+uniform float u_parallaxScale;
+in vec2  v_local;
+in vec2  v_sampleUV;
+in float v_scale;
+out vec4 outColor;
+void main() {
+  if (v_scale > u_maxParticleScale) discard;
+  if (v_scale < 0.001) discard;
+  float ps = max(1.0, u_parallaxScale);
+  float uvScale = (u_particleBaseScale * max(v_scale, 0.0)) / ps;
+  vec2 uvOffset = v_local * (0.5 / u_grid) * uvScale * u_coverScale;
+  vec2 uv = v_sampleUV + uvOffset;
+  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) discard;
+  vec4 texColor = texture(u_tex, uv);
+  if (texColor.a < 0.05) discard;
+  outColor = texColor;
+}`;
+
+(function initGL(){
+  const scatter = document.getElementById('scatter');
+  const canvas  = document.getElementById('glcanvas');
+  function fail(msg){
+    console.warn('[magic_crousal]', msg);
+    scatter.classList.add('-gl-failed');
+  }
+  if (location.protocol === 'file:') {
+    console.warn(
+      '[magic_crousal] You opened this file via file:// — Chrome/Safari often block ' +
+      'loading local images into WebGL textures (CORS taint), which disables the ' +
+      'particle disintegration. To see the effect, run a tiny local server in the ' +
+      'project folder, e.g.:\n\n  python3 -m http.server 8000\n\nthen open ' +
+      'http://localhost:8000/magic_crousal.html'
+    );
+  }
+  const gl = canvas.getContext('webgl2', { antialias:false, premultipliedAlpha:true, alpha:true });
+  if (!gl) { fail('WebGL2 not available — falling back to plain image crossfade.'); return; }
+
+  /* ----- compile / link ----- */
+  function compile(type, source, label) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, source); gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error('[magic_crousal] '+label+' compile error:\n'+gl.getShaderInfoLog(sh));
+      gl.deleteShader(sh); return null;
+    }
+    return sh;
+  }
+  const vs = compile(gl.VERTEX_SHADER,   VSHADER, 'VS');
+  const fs = compile(gl.FRAGMENT_SHADER, FSHADER, 'FS');
+  if (!vs || !fs) { fail('shader compile failed'); return; }
+  const program = gl.createProgram();
+  gl.attachShader(program, vs); gl.attachShader(program, fs);
+  gl.bindAttribLocation(program, 0, 'a_corner');
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error('[magic_crousal] link error:\n'+gl.getProgramInfoLog(program));
+    fail('program link failed'); return;
+  }
+  gl.useProgram(program);
+
+  /* uniforms */
+  const U = {};
+  ['u_grid','u_phase','u_resolution','u_randomness','u_scatterDistance',
+   'u_particleBaseScale','u_coverScale','u_parallaxOffset','u_parallaxStrength',
+   'u_parallaxScale','u_hoverSpeed','u_hoverAmplitude','u_affectRatio','u_time',
+   'u_tex','u_maxParticleScale'
+  ].forEach(n => U[n] = gl.getUniformLocation(program, n));
+
+  /* corner quad VBO */
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  const cornerBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1,-1,  1,-1,  -1, 1,
+     1,-1,  1, 1,  -1, 1
+  ]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  /* render state — clear to YELLOW (the page background colour) so that
+     particles flying off-screen during the scatter reveal an empty
+     yellow stage underneath. This is what makes the disintegration
+     visible.                                                          */
+  gl.clearColor(241/255, 234/255, 222/255, 1.0);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+  /* texture loader */
+  const textures = new Array(PLACES.length).fill(null);
+  const imgMeta  = new Array(PLACES.length).fill(null); /* w/h for cover scale */
+
+  function makeTex(image) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);   /* match original — fixes upside-down image */
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    return tex;
+  }
+  /* Reuse the <img> tags that the browser has already loaded.
+     They're guaranteed same-origin & decoded — no separate fetch needed. */
+  function loadImage(i) {
+    return new Promise((resolve) => {
+      const domImg = bgImgs[i];
+      const upload = () => {
+        try {
+          if (!domImg.naturalWidth) { resolve(); return; }
+          textures[i] = makeTex(domImg);
+          imgMeta[i]  = { w: domImg.naturalWidth, h: domImg.naturalHeight };
+        } catch (e) {
+          console.warn('[magic_crousal] texture upload failed for', PLACES[i].src, e);
+        }
+        resolve();
+      };
+      if (domImg.complete && domImg.naturalWidth) {
+        upload();
+      } else {
+        domImg.addEventListener('load',  upload,             { once:true });
+        domImg.addEventListener('error', () => { console.warn('[magic_crousal] img failed:', PLACES[i].src); resolve(); }, { once:true });
+      }
+    });
+  }
+
+  /* sizing & grid */
+  let gridCols = 1, gridRows = 1, instanceCount = 1;
+  let cssW = 0, cssH = 0, dpr = 1;
+  function recomputeGrid() {
+    /* target particle count - reduce on mobile */
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches;
+    const target = isMobile ? 50000 : 220000;
+    const aspect = cssW / cssH;
+    let rows = Math.max(60, Math.round(Math.sqrt(target / aspect)));
+    let cols = Math.max(60, Math.round(rows * aspect));
+    gridCols = cols; gridRows = rows;
+    instanceCount = cols * rows;
+  }
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    cssW = Math.max(1, rect.width);
+    cssH = Math.max(1, rect.height);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.floor(cssW * dpr);
+    canvas.height = Math.floor(cssH * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    recomputeGrid();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* ----- main render loop — paints every active layer in STATE.layers,
+     each with its own phase + parallax. Layers are pre-sorted by the
+     driver to paint most-scattered first.                              */
+  const tStart = performance.now();
+  function frame() {
+    requestAnimationFrame(frame);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    const layers = STATE.layers;
+    if (!layers || !layers.length) return;
+
+    gl.bindVertexArray(vao);
+    gl.useProgram(program);
+
+    const canvasA = cssW / cssH;
+    const t = (performance.now() - tStart) * 0.001;
+
+    /* shared uniforms (constant across layers) */
+    gl.uniform2f(U.u_grid, gridCols, gridRows);
+    gl.uniform2f(U.u_resolution, canvas.width, canvas.height);
+    gl.uniform1f(U.u_randomness,        ORIGINAL.randomness);
+    gl.uniform1f(U.u_scatterDistance,   ORIGINAL.scatterDistance);
+    gl.uniform1f(U.u_particleBaseScale, ORIGINAL.particleBaseScale);
+    gl.uniform1f(U.u_maxParticleScale,  ORIGINAL.maxParticleScale);
+    gl.uniform1f(U.u_parallaxStrength,  ORIGINAL.parallaxStrength);
+    gl.uniform1f(U.u_parallaxScale,     ORIGINAL.parallaxScale);
+    gl.uniform1f(U.u_hoverSpeed,        ORIGINAL.hoverSpeed);
+    gl.uniform1f(U.u_hoverAmplitude,    ORIGINAL.hoverAmplitude);
+    gl.uniform1f(U.u_affectRatio,       ORIGINAL.affectRatio);
+    gl.uniform1f(U.u_time,              t);
+
+    for (const L of layers) {
+      const tex = textures[L.index];
+      if (!tex) continue;
+      const meta = imgMeta[L.index] || { w:1920, h:1080 };
+      const imageA = meta.w / meta.h;
+      const coverX = canvasA < imageA ? canvasA / imageA : 1;
+      const coverY = imageA  < canvasA ? imageA  / canvasA : 1;
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform1i(U.u_tex, 0);
+      gl.uniform2f(U.u_coverScale, coverX, coverY);
+      gl.uniform1f(U.u_phase,          L.phase);
+      gl.uniform1f(U.u_parallaxOffset, L.parallax);
+
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instanceCount);
+    }
+  }
+
+  /* ----- boot: load images then run loop ----- */
+  console.log('[magic_crousal] WebGL2 initialized — loading',PLACES.length,'images');
+  Promise.all(PLACES.map((_, i) => loadImage(i))).then(() => {
+    const ok = textures.filter(Boolean).length;
+    console.log('[magic_crousal]',ok,'/',PLACES.length,'textures ready');
+    if (ok === 0) { fail('no textures loaded — keeping <img> fallback visible'); return; }
+    resize();           /* ensure canvas backing size is current */
+    syncFromScroll();   /* sync state right before first frame */
+    scatter.classList.add('-gl-ready');
+    requestAnimationFrame(frame);
+  });
+})();
+</script>
+</body>
+</html>
